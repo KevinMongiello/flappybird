@@ -72,19 +72,19 @@ There will be no backend for this project.
 
 Live Project
 
-[ ] Includes links to your Portfolio, Github and LinkedIn.
-[ ] Landing page/modal with obvious, clear instructions.
-[ ] Interactivity of some kind.
-[ ] Well styled, clean frontend.
-[ ] If it has music, the option to mute or stop it.
-[ ] Hosted from your portfolio site on GitHub pages.
+- [ ] Includes links to your Portfolio, Github and LinkedIn.
+- [ ] Landing page/modal with obvious, clear instructions.
+- [ ] Interactivity of some kind.
+- [ ] Well styled, clean frontend.
+- [ ] If it has music, the option to mute or stop it.
+- [ ] Hosted from your portfolio site on GitHub pages.
 
 Repo and README
 
-[ ] Link to live version.
-[ ] Instructions on how to play/use the project.
-[ ] List of techs/languages/plugins/APIs used.
-[ ] Technical implementation details with code snippets (make sure it looks good).
-[ ] To-dos/future features.
-[ ] No .DS_Stores / debuggers / console.logs.
-[ ] Organize into /assets and /lib.
+- [ ] Link to live version.
+- [ ] Instructions on how to play/use the project.
+- [ ] List of techs/languages/plugins/APIs used.
+- [ ] Technical implementation details with code snippets (make sure it looks good).
+- [ ] To-dos/future features.
+- [ ] No .DS_Stores / debuggers / console.logs.
+- [ ] Organize into /assets and /lib.
