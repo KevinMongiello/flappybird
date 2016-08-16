@@ -2,7 +2,7 @@
 
 ## MVP
 
-Flappy Bird is a endless side-scroller game where the player tries to navigate between the pipes for as long as possible. This game is built with pure Javascript, HTML, and CSS.
+Flappy Bird is a endless side-scroller game where the player tries to navigate between the pipes for as long as possible. This game is built in Javascript, HTML, CSS, and Canvas.
 
 0. Game physics
   - onKey EventListener to fly
