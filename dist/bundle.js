@@ -49,13 +49,13 @@
 	function draw() {
 	  const canvas = document.getElementById("flappy-bird");
 	  const canvasCtx = canvas.getContext("2d");
-	  const gv = new GameView(canvasCtx)
+	  const gv = new GameView(canvasCtx);
 	  gv.start();
 	}
 
 	document.addEventListener("DOMContentLoaded", () => {
 	  draw();
-	})
+	});
 
 
 /***/ },
@@ -65,13 +65,16 @@
 	const Game = __webpack_require__(2);
 
 	const GameView = function(ctx) {
-	  this.game = new Game();
+	  this.game = new Game(this);
 	  this.ctx = ctx;
 	  this.bird = this.game.addBird();
 	  this.game.addPipes();
+	  // this.initKeyHandler
+	  this.bindKeyHandlers();
 	};
 
 	GameView.MOVES = ["w", "up"];
+
 	GameView.prototype.bindKeyHandlers = function() {
 	  const bird = this.bird;
 	  GameView.MOVES.forEach((move) => {
@@ -80,17 +83,24 @@
 	};
 
 	GameView.prototype.start = function () {
-	  this.bindKeyHandlers();
+	  this.gameOver = false;
+	  this.bird.pos = [50, 100];
 	  let gameFrame = 0;
 	  const animateCallBack = function () {
+	    if (this.gameOver === true) {
+	      return;
+	    }
 	    gameFrame ++;
 	    this.game.step(gameFrame);
 	    this.game.draw(this.ctx);
-	    this.game.startUpTest(this.ctx);
 	    requestAnimationFrame(animateCallBack);
 	  }.bind(this);
 
-	  animateCallBack();
+	  this.anim = animateCallBack();
+	};
+
+	GameView.prototype.stop = function () {
+
 	};
 
 	module.exports = GameView;
@@ -103,28 +113,41 @@
 	const Bird = __webpack_require__(3);
 	const Pipe = __webpack_require__(6);
 	const Constants = __webpack_require__(7);
+	const Foreground = __webpack_require__(8);
 
-	const Game = function() {
+	const Game = function(gv) {
+	  this.gv = gv;
+	  this.score = 0;
 	  this.pipes = [];
 	  this.DIM_X = Constants.WIDTH;
 	  this.DIM_Y = Constants.HEIGHT;
+	  this.background = document.getElementById('background');
 
-	};
-
-	Game.prototype.startUpTest = function(ctx) {
-	  ctx.fillStyle = "yellow";
-	  ctx.fillRect(0,0, 10, 200);
+	  this.foreground = [new Foreground(this, { pos: [0, 410] } )];
+	  this.gameOver = false;
+	  this.GROUND_Y = 410;
 	};
 
 	Game.prototype.draw = function(ctx) {
 	  ctx.clearRect(0, 0, this.DIM_X, this.DIM_Y);
+	  // this.background = new Image();
+	  // this.background.src = 'bin/pics/background.jpg';
+	  // this.background.onload = () => { ctx.drawImage(this.background, 0, 0, 350, 525); };
+	  ctx.drawImage(this.background, 0, 0, 350, 525);
 	  this.allObjects().forEach(function (object) {
 	    object.draw(ctx);
 	  });
+	  // draw ground
+	  // make a draw foreground function
+
+	  ctx.fillStyle = "white";
+	  ctx.font = '48px serif';
+	  ctx.fillText(`${this.score}`, 160, 50);
 	};
 
 	Game.prototype.allObjects = function () {
-	  return this.pipes.concat(this.bird);
+	  // Foreground is last for render
+	  return this.pipes.concat(this.bird).concat(this.foreground);
 	};
 
 	Game.prototype.moveObjects = function() {
@@ -133,15 +156,30 @@
 	  });
 	};
 
+	Game.prototype.checkForeground = function() {
+	  if (this.foreground[0].pos[0] + Constants.WIDTH < 0) {
+	    this.foreground.shift();
+	  }
+	  // debugger
+	  if (this.foreground[0].pos[0] < 0 && this.foreground.length < 2) {
+	    this.foreground.push(new Foreground(this, { pos: [350, 410] }));
+	  }
+	};
+
+
 	Game.prototype.step = function(gameFrame) {
 	  this.moveObjects();
 	  this.isCollision();
-	  if (gameFrame % 100 === 0) { this.addPipes(); }
+	  this.checkForeground();
+	  if (this.isOutOfBounds(this.bird)) {
+	    this.stopGame();
+	  }
+	  if (gameFrame % 100 === 0 && !this.gameOver) { this.addPipes(); this.score++;}
 	};
 
 	Game.prototype.addBird = function() {
 	  const bird = new Bird({
-	    pos: [150, 20],
+	    pos: [110, 20],
 	    game: this
 	  });
 	  this.bird = bird;
@@ -150,13 +188,13 @@
 	};
 
 	function _randNum() {
-	  return Math.floor(Math.random() * 15) + 1;
+	  return Math.floor(Math.random() * 10) + 1;
 	}
 
 	Game.prototype.addPipes = function () {
 	  let pipes = Pipe.prototype.addPipes({
 	    game: this,
-	    pos: [this.DIM_X - 30, 0],
+	    pos: [this.DIM_X + 10, 0],
 	    gapNum: _randNum()
 	  });
 
@@ -167,7 +205,7 @@
 	Game.prototype.isOutOfBounds = function(obj) {
 	  let x = obj.pos[0], y = obj.pos[1];
 
-	  if (x < 0 || y < 0 || y > this.DIM_Y) {
+	  if (x < 0 || y < 0 || y > this.GROUND_Y - 20) {
 	    return true;
 	  }
 	  return false;
@@ -197,10 +235,17 @@
 	Game.prototype.isCollision = function() {
 	  this.pipes.forEach( (pipe) => {
 	    if (RectCircleColliding(this.bird, pipe)) {
-	      pipe.color = "red";
+	      this.stopGame();
 	    }
-
 	  });
+	};
+
+	Game.prototype.stopGame = function() {
+	  this.gameOver = true;
+	  this.allObjects().forEach( (obj) =>  obj.vel = [0, 0] );
+	  this.bird.accel = [0, 0];
+	  this.gv.gameOver = true;
+	  // this.gv.start();
 	};
 
 	module.exports = Game;
@@ -214,7 +259,7 @@
 	const Util = __webpack_require__(5);
 
 	const Bird = function(obj) {
-	  MovingObject.call(this, {game: obj.game, pos: obj.pos, vel: [0, 1], radius: 20, color: "green"});
+	  MovingObject.call(this, {game: obj.game, pos: obj.pos, vel: [0, 1], radius: 15, color: "green"});
 	  this.accel = [0, 0.28];
 	  this.image = document.getElementById('bird');
 	};
@@ -231,6 +276,7 @@
 
 	Bird.prototype.draw = function (ctx) {
 	  ctx.fillStyle = "transparent";
+	  // ctx.fillStyle = "green";
 	  ctx.beginPath();
 
 	  ctx.arc(
@@ -244,7 +290,7 @@
 	  ctx.closePath();
 
 	  ctx.fill();
-	  ctx.drawImage(this.image, this.pos[0]- 38, this.pos[1]-42, 80, 84);
+	  ctx.drawImage(this.image, this.pos[0] - 16, this.pos[1] - 8, 33, 25);
 	};
 
 	Number.prototype.clamp = function(min, max) {
@@ -313,19 +359,29 @@
 	  pos = options.pos;
 	  MovingObject.call(this, {game: options.game, vel: vel, pos: pos, color: "green"} );
 	  this.w = 20;
+	  this.rotate = options.rotate;
 	  this.h = options.h;
+	  this.image = options.image;
+	  this.image_origin = options.image_origin;
+	  this.pipe_bottom = options.pipe_bottom;
 	};
 	Util.inherits(Pipe, MovingObject);
 
 	Pipe.prototype.addPipes = function(options) {
 	  // Top Pipe
 	  options.h = 30 * options.gapNum;
+	  options.image = document.getElementById("pipe_180");
+	  options.image_origin = (options.h - 50);
+	  options.pipe_bottom = document.getElementById("pipe_bottom_180");
 	  let pipe1 = new Pipe(options);
 
 	  // Bottom Pipe
 	  let pos1 = options.pos[0];
 	  options.pos = [pos1, (30 * options.gapNum) + 90];
 	  options.h = 600;
+	  options.image = document.getElementById("pipe");
+	  options.pipe_bottom = document.getElementById("pipe_bottom");
+	  options.image_origin = options.pos[1];
 	  let pipe2 = new Pipe(options);
 
 	  return [pipe1, pipe2];
@@ -335,6 +391,8 @@
 	Pipe.prototype.draw = function (ctx) {
 	  ctx.fillStyle = this.color;
 	  ctx.fillRect(this.pos[0], this.pos[1], 20, this.h);
+	  ctx.drawImage(this.pipe_bottom, this.pos[0], this.pos[1], 20, this.h);
+	  ctx.drawImage(this.image, this.pos[0] - 2, this.image_origin, 24, 50);
 	};
 
 
@@ -347,9 +405,29 @@
 /***/ function(module, exports) {
 
 	module.exports = {
-	  WIDTH: 400,
-	  HEIGHT: 600
+	  WIDTH: 350,
+	  HEIGHT: 525
 	};
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	const MovingObject = __webpack_require__(4);
+	const Util = __webpack_require__(5);
+
+	const Foreground = function(game, options) {
+	  this.image = document.getElementById('ground_chopped');
+	  MovingObject.call(this, {pos: options.pos, vel: [-1, 0], game: game});
+	};
+	Util.inherits(Foreground, MovingObject);
+
+	Foreground.prototype.draw = function(ctx) {
+	  ctx.drawImage(this.image, this.pos[0], this.pos[1], 350, 194);
+	};
+
+	module.exports = Foreground;
 
 
 /***/ }

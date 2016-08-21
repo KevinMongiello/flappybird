@@ -5,13 +5,22 @@
     <title></title>
     <script type="application/javascript" src="vendor/keymaster.js"></script>
     <script src="./dist/bundle.js" charset="utf-8"></script>
+    <div style="display:none;">
+      <img id="bird" src="./bin/pics/bird.png">
+      <img id="pipe" src="./bin/pics/pipe.png">
+      <img id="pipe_180" src="./bin/pics/pipe_180.png">
+      <img id="pipe_bottom" src="./bin/pics/pipe_copy.png">
+      <img id="pipe_bottom_180" src="./bin/pics/pipe_copy_180.png">
+      <img id="background" src="./bin/pics/background.jpg">
+      <img id="ground" src="./bin/pics/ground.jpg">
+      <img id="ground_chopped" src="./bin/pics/ground_chopped.png">
+    </div>
+    <link rel="stylesheet" href="./bin/css/application.css" charset="utf-8">
 
   </head>
   <body>
-    <canvas id="flappy-bird" style="border: 2px solid black" width="400" height="600"></canvas>
-    <div style="display:none;">
-      <img id="bird" src="http://vignette1.wikia.nocookie.net/fantendo/images/8/85/Flappy_Bird.png/revision/latest?cb=20140208141118"
-      width="10" height="10" >
+    <div class="game">
+      <canvas id="flappy-bird" style="border: 2px solid black; width: 350px; margin: 0 auto;" width="350" height="525"></canvas>
     </div>
   </body>
 </html>
