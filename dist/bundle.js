@@ -290,7 +290,7 @@
 	  ctx.closePath();
 
 	  ctx.fill();
-	  ctx.drawImage(this.image, this.pos[0] - 16, this.pos[1] - 8, 33, 25);
+	  ctx.drawImage(this.image, this.pos[0] - 16, this.pos[1] - 14, 33, 28);
 	};
 
 	Number.prototype.clamp = function(min, max) {
