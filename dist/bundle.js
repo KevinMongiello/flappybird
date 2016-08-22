@@ -71,6 +71,7 @@
 	  this.game.addPipes();
 	  // this.initKeyHandler
 	  this.bindKeyHandlers();
+	  this.jumpCount = this.game.jumpCount;
 	};
 
 	GameView.MOVES = ["w", "up"];
@@ -78,13 +79,29 @@
 	GameView.prototype.bindKeyHandlers = function() {
 	  const bird = this.bird;
 	  GameView.MOVES.forEach((move) => {
-	    key(move, function() { bird.jump(); });
+	    key(move, function() {
+	      if (this.jumpCount < 1) {
+	        //  remove text directions
+	        //  set gravity, and velocity
+	        // debugger
+	        this.game.foreground[0].vel = [-1, 0];
+	        bird.accel = [0, 0.28];
+	        //  switch on pipes
+	        this.game.gameSwitch = true;
+	        bird.jump();
+	        this.jumpCount++;
+	      } else {
+	        bird.jump();
+	        this.jumpCount++;
+
+	      }
+	    }.bind(this));
 	  });
 	};
 
 	GameView.prototype.start = function () {
 	  this.gameOver = false;
-	  this.bird.pos = [50, 100];
+	  this.bird.pos = [100, 100];
 	  let gameFrame = 0;
 	  const animateCallBack = function () {
 	    if (this.gameOver === true) {
@@ -122,10 +139,11 @@
 	  this.DIM_X = Constants.WIDTH;
 	  this.DIM_Y = Constants.HEIGHT;
 	  this.background = document.getElementById('background');
-
-	  this.foreground = [new Foreground(this, { pos: [0, 410] } )];
+	  this.foreground = [new Foreground(this, { pos: [0, 410], vel: [0, 0] } )];
 	  this.gameOver = false;
 	  this.GROUND_Y = 410;
+	  this.gameSwitch = false;
+	  this.jumpCount = 0;
 	};
 
 	Game.prototype.draw = function(ctx) {
@@ -162,7 +180,7 @@
 	  }
 	  // debugger
 	  if (this.foreground[0].pos[0] < 0 && this.foreground.length < 2) {
-	    this.foreground.push(new Foreground(this, { pos: [350, 410] }));
+	    this.foreground.push(new Foreground(this, { pos: [350, 410], vel: [-1, 0] }));
 	  }
 	};
 
@@ -192,6 +210,9 @@
 	}
 
 	Game.prototype.addPipes = function () {
+	  if (!this.gameSwitch) {
+	    return;
+	  }
 	  let pipes = Pipe.prototype.addPipes({
 	    game: this,
 	    pos: [this.DIM_X + 10, 0],
@@ -259,8 +280,9 @@
 	const Util = __webpack_require__(5);
 
 	const Bird = function(obj) {
-	  MovingObject.call(this, {game: obj.game, pos: obj.pos, vel: [0, 1], radius: 15, color: "green"});
-	  this.accel = [0, 0.28];
+	  MovingObject.call(this, {game: obj.game, pos: obj.pos, vel: [0, 0], radius: 15, color: "green"});
+	  this.accel = [0, 0];
+	  // FINAL ACCEL = [0, 0.28];
 	  this.image = document.getElementById('bird');
 	};
 
@@ -290,7 +312,7 @@
 	  ctx.closePath();
 
 	  ctx.fill();
-	  ctx.drawImage(this.image, this.pos[0] - 16, this.pos[1] - 14, 33, 28);
+	  ctx.drawImage(this.image, this.pos[0] - 16, this.pos[1] - 15, 33, 28);
 	};
 
 	Number.prototype.clamp = function(min, max) {
@@ -364,6 +386,7 @@
 	  this.image = options.image;
 	  this.image_origin = options.image_origin;
 	  this.pipe_bottom = options.pipe_bottom;
+	  this.pipe_bottom_origin = options.pipe_bottom_origin;
 	};
 	Util.inherits(Pipe, MovingObject);
 
@@ -373,6 +396,7 @@
 	  options.image = document.getElementById("pipe_180");
 	  options.image_origin = (options.h - 50);
 	  options.pipe_bottom = document.getElementById("pipe_bottom_180");
+	  options.pipe_bottom_origin = -10;
 	  let pipe1 = new Pipe(options);
 
 	  // Bottom Pipe
@@ -382,6 +406,7 @@
 	  options.image = document.getElementById("pipe");
 	  options.pipe_bottom = document.getElementById("pipe_bottom");
 	  options.image_origin = options.pos[1];
+	  options.pipe_bottom_origin = options.image_origin;
 	  let pipe2 = new Pipe(options);
 
 	  return [pipe1, pipe2];
@@ -391,7 +416,7 @@
 	Pipe.prototype.draw = function (ctx) {
 	  ctx.fillStyle = this.color;
 	  ctx.fillRect(this.pos[0], this.pos[1], 20, this.h);
-	  ctx.drawImage(this.pipe_bottom, this.pos[0], this.pos[1], 20, this.h);
+	  ctx.drawImage(this.pipe_bottom, this.pos[0], this.pipe_bottom_origin, 20, this.h);
 	  ctx.drawImage(this.image, this.pos[0] - 2, this.image_origin, 24, 50);
 	};
 
@@ -419,12 +444,12 @@
 
 	const Foreground = function(game, options) {
 	  this.image = document.getElementById('ground_chopped');
-	  MovingObject.call(this, {pos: options.pos, vel: [-1, 0], game: game});
+	  MovingObject.call(this, {pos: options.pos, vel: options.vel, game: game});
 	};
 	Util.inherits(Foreground, MovingObject);
 
 	Foreground.prototype.draw = function(ctx) {
-	  ctx.drawImage(this.image, this.pos[0], this.pos[1], 350, 194);
+	  ctx.drawImage(this.image, this.pos[0], this.pos[1], 353, 194);
 	};
 
 	module.exports = Foreground;
