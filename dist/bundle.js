@@ -81,11 +81,9 @@
 	  GameView.MOVES.forEach((move) => {
 	    key(move, function() {
 	      if (this.jumpCount < 1) {
-	        //  remove text directions
-	        //  set gravity, and velocity
-	        // debugger
 	        this.game.foreground[0].vel = [-1, 0];
 	        bird.accel = [0, 0.28];
+	        
 	        //  switch on pipes
 	        this.game.gameSwitch = true;
 	        bird.jump();
@@ -148,19 +146,20 @@
 
 	Game.prototype.draw = function(ctx) {
 	  ctx.clearRect(0, 0, this.DIM_X, this.DIM_Y);
-	  // this.background = new Image();
-	  // this.background.src = 'bin/pics/background.jpg';
-	  // this.background.onload = () => { ctx.drawImage(this.background, 0, 0, 350, 525); };
 	  ctx.drawImage(this.background, 0, 0, 350, 525);
 	  this.allObjects().forEach(function (object) {
 	    object.draw(ctx);
 	  });
-	  // draw ground
-	  // make a draw foreground function
+
 
 	  ctx.fillStyle = "white";
-	  ctx.font = '48px serif';
-	  ctx.fillText(`${this.score}`, 160, 50);
+	  if (!this.gameSwitch) {
+	    ctx.font = '20px serif';
+	    ctx.fillText("Press 'w' or 'up' arrow to jump!", 50, 40);
+	  } else{
+	    ctx.font = '48px serif';
+	    ctx.fillText(`${this.score}`, 160, 50);
+	  }
 	};
 
 	Game.prototype.allObjects = function () {
@@ -192,7 +191,7 @@
 	  if (this.isOutOfBounds(this.bird)) {
 	    this.stopGame();
 	  }
-	  if (gameFrame % 100 === 0 && !this.gameOver) { this.addPipes(); this.score++;}
+	  if (gameFrame % 100 === 0 && !this.gameOver) { this.addPipes();}
 	};
 
 	Game.prototype.addBird = function() {
@@ -213,6 +212,7 @@
 	  if (!this.gameSwitch) {
 	    return;
 	  }
+	  this.score++;
 	  let pipes = Pipe.prototype.addPipes({
 	    game: this,
 	    pos: [this.DIM_X + 10, 0],
@@ -226,7 +226,7 @@
 	Game.prototype.isOutOfBounds = function(obj) {
 	  let x = obj.pos[0], y = obj.pos[1];
 
-	  if (x < 0 || y < 0 || y > this.GROUND_Y - 20) {
+	  if (x < 0 || y > this.GROUND_Y - 20) {
 	    return true;
 	  }
 	  return false;
@@ -284,6 +284,9 @@
 	  this.accel = [0, 0];
 	  // FINAL ACCEL = [0, 0.28];
 	  this.image = document.getElementById('bird');
+	  this.sx = 0;
+	  this.birdFrame = 0;
+	  this.flapSpeed = 8;
 	};
 
 	Util.inherits(Bird, MovingObject);
@@ -297,22 +300,33 @@
 	};
 
 	Bird.prototype.draw = function (ctx) {
+
 	  ctx.fillStyle = "transparent";
 	  // ctx.fillStyle = "green";
 	  ctx.beginPath();
 
 	  ctx.arc(
-	    this.pos[0],
-	    this.pos[1],
+	    this.pos[0] - 46,
+	    this.pos[1] - 32,
 	    this.radius,
 	    0,
 	    2 * Math.PI,
 	    false
 	  );
 	  ctx.closePath();
-
 	  ctx.fill();
-	  ctx.drawImage(this.image, this.pos[0] - 16, this.pos[1] - 15, 33, 28);
+
+	  ctx.drawImage(
+	    this.image,
+	    this.sx,
+	    0,
+	    92,
+	    64,
+	    this.pos[0] - 16,
+	    this.pos[1] - 15,
+	    33,
+	    28
+	  );
 	};
 
 	Number.prototype.clamp = function(min, max) {
@@ -324,8 +338,18 @@
 	}
 
 	Bird.prototype.move = function () {
+	  this.birdFrame ++;
+	  if (this.birdFrame % this.flapSpeed === 0) {
+	    this.sx = (this.sx + 92) % 276;
+	  }
 	  this.vel[1] = _getVel(this.vel[1]);
 	  this.vel[1] += this.accel[1];
+	  if (this.vel[1] <= -1) {
+
+	    this.flapSpeed = 4;
+	  } else {
+	    this.flapSpeed = 8;
+	  }
 	  this.pos[0] += this.vel[0];
 	  this.pos[1] += this.vel[1];
 	};
