@@ -1,4 +1,60 @@
+body, html {
+  padding: 0;
+  margin: 0;
+}
+
+img {
+  display: block;
+}
+
+ul, li, a {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+  color: black;
+  font: inherits;
+}
+
 .game {
+  position: relative;
   width: 350px;
+  /*padding: 50px;*/
+  padding-top: 20px;
   margin: 0 auto;
+  /*background-color: white;*/
+}
+
+.canvas-bg {
+  position:absolute;
+  display: block;
+  width:
+}
+
+.page {
+  position: absolute;
+  z-index: -1;
+  display: block;
+  width: 101%;
+  height: 101%;
+  background-size: 100%;
+  opacity: 0.18;
+  min-height: 725px;
+}
+
+.page:after {
+}
+
+.title {
+  margin: 0 auto;
+  width: 400px;
+}
+
+.links {
+  position: absolute;
+  top: 4%;
+  left: -153px;
+  color: black;
+  font-size: 36px;
+  font-family: Berkshire Swash;
 }
