@@ -53,7 +53,7 @@
 	    localStorage.highScore = "0";
 	  }
 	  const gv = new GameView(canvasCtx);
-	  
+
 	}
 
 	document.addEventListener("DOMContentLoaded", () => {
@@ -99,41 +99,46 @@
 	  document.addEventListener("keydown", this.keypress.bind(this));
 	};
 
+	GameView.prototype.removeHandlers = function() {
+	  document.removeEventListener("keydown", this.keypress);
+	};
+
+	GameView.prototype.animateCallBack = function () {
+
+	  if (this.gameOver === true) {
+	    this.stop();
+	    return;
+	  }
+	  this.gameFrame ++;
+	  this.game.step(this.gameFrame);
+	  this.game.draw(this.ctx);
+	  requestAnimationFrame(this.animateCallBack.bind(this));
+	};
+
+	GameView.prototype.startInterval = function () {
+	  this.animateCallBack();
+	  // this.interval = setInterval(this.animateCallBack.bind(this), 33);
+	};
+
 	GameView.prototype.start = function () {
 	  this.gameOver = false;
 	  this.bird.pos = [100, 100];
-	  let gameFrame = 0;
-	  const animateCallBack = function () {
-	    if (this.gameOver === true) {
-	      this.stop();
-	      return;
-	    }
-	    gameFrame ++;
-	    this.game.step(gameFrame);
-	    this.game.draw(this.ctx);
-	    requestAnimationFrame(animateCallBack);
-	  }.bind(this);
-
-	  animateCallBack();
+	  this.gameFrame = 0;
+	  this.startInterval();
 	};
 
 	GameView.prototype.stop = function () {
-	  let gv = this;
-	  key("enter", function() {
-	    gv.reset();
-	  });
+	  // clearInterval(this.interval);
+	  this.removeHandlers();
+	  let resetHandler = (e) => {
+	    if (e.keyCode === 13) {
+	      new GameView(this.ctx);
+	      window.removeEventListener('keydown', resetHandler);
+	    }
+	  };
+	  window.addEventListener('keydown', resetHandler);
 	};
 
-	GameView.prototype.reset = function() {
-	  // delete this.game;
-	  this.game = new Game(this);
-	  this.game.addPipes();
-	  this.bindKeyHandlers();
-	  this.bird = this.game.addBird();
-	  this.jumpCount = this.game.jumpCount;
-
-	  this.start();
-	};
 
 	module.exports = GameView;
 
@@ -159,16 +164,21 @@
 	  this.GROUND_Y = 410;
 	  this.gameSwitch = false;
 	  this.jumpCount = 0;
+	  this.addPipes();
 	};
 
 	Game.prototype.draw = function(ctx) {
 	  ctx.clearRect(0, 0, this.DIM_X, this.DIM_Y);
 	  ctx.drawImage(this.background, 0, 0, 350, 525);
+
 	  this.allObjects().forEach(function (object) {
 	    object.draw(ctx);
 	  });
 
+	  this.mainText(ctx);
+	};
 
+	Game.prototype.mainText = function (ctx) {
 	  ctx.fillStyle = "white";
 	  if (!this.gameSwitch) {
 	    ctx.font = '20px serif';
@@ -176,9 +186,19 @@
 	  } else{
 	    ctx.font = '48px serif';
 	    ctx.fillText(`${this.score}`, 160, 50);
-	    ctx.font = '10px serif';
+	    ctx.font = '12px serif';
 	    ctx.fillText(`HIGHSCORE: ${localStorage.highScore}`, 30, 30);
+	    if (this.gameOver) {
+	      this.gameoverText(ctx);
+	    }
 	  }
+	};
+
+	Game.prototype.gameoverText = function(ctx) {
+	  ctx.fillStyle = "white";
+	  ctx.font = '24px serif';
+	  ctx.fillText("GAME OVER", 50, 100);
+	  ctx.fillText("Press 'Enter' to play again!", 50, 130);
 	};
 
 	Game.prototype.allObjects = function () {
@@ -290,6 +310,10 @@
 	  this.bird.accel = [0, 0];
 	  this.gv.gameOver = true;
 	  // this.gv.start();
+	};
+
+	Game.prototype.delete = function () {
+	  this.allObjects().forEach( (obj) => obj = null );
 	};
 
 	module.exports = Game;
