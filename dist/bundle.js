@@ -45,24 +45,28 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	const GameView = __webpack_require__(1);
-	const Constants = __webpack_require__(4);
+	const Constants = __webpack_require__(5);
 
-	function draw() {
+	function initStorage() {
+	  if (!localStorage.flappybirdHighScoreHARD) localStorage.flappybirdHighScoreHARD = "0";
+	  if (!localStorage.flappybirdHighScoreMEDHARD) localStorage.flappybirdHighScoreMEDHARD = "0";
+	  if (!localStorage.flappybirdHighScoreMEDEASY) localStorage.flappybirdHighScoreMEDEASY = "0";
+	  if (!localStorage.flappybirdHighScoreEASY) localStorage.flappybirdHighScoreEASY = "0";
+	}
+
+	function start() {
 	  const canvas = document.getElementById("flappy-bird");
 	  const canvasCtx = canvas.getContext("2d");
-	  if (!localStorage.highScore) {
-	    localStorage.highScore = "0";
-	  }
-	  Constants.hardness(document.getElementById('game-level').value);
-	  const gv = new GameView(canvasCtx, Constants);
+	  initStorage();
 
+	  const gv = new GameView(canvasCtx, Constants);
 	}
 
 	document.addEventListener("DOMContentLoaded", () => {
-	  draw();
+	  start();
 	});
 
-	window.gConstants = __webpack_require__(4);
+	window.gConstants = __webpack_require__(5);
 
 
 /***/ },
@@ -70,7 +74,6 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	const Game = __webpack_require__(2);
-	// const Constants = require('./game_constants');
 
 	const GameView = function(ctx, Constants) {
 	  this.Constants = Constants;
@@ -81,6 +84,7 @@
 	  this.bindKeyHandlers();
 	  this.jumpCount = this.game.jumpCount;
 	  this.start();
+	  document.activeElement.blur();
 	};
 
 	GameView.MOVES = ["w", "up"];
@@ -88,6 +92,8 @@
 	GameView.prototype.keypress = function(e) {
 	  if (e.key === "ArrowUp" || e.key === "w") {
 	    if (this.jumpCount < 1) {
+	      this.Constants.hardness(document.getElementById('game-level').value);
+	      this.game.updateConstants();
 	      this.game.foreground[0].vel = this.Constants.GAME_VELOCITY;
 	      this.bird.accel = this.Constants.GRAVITY;
 	      this.game.gameSwitch = true;
@@ -113,7 +119,6 @@
 	    this.stop();
 	    return;
 	  }
-
 	  let timeDelta = time - this.lastTime;
 	  this.gameFrame ++;
 	  this.game.step(this.gameFrame, timeDelta);
@@ -122,26 +127,19 @@
 	  requestAnimationFrame(this.animateCallBack.bind(this));
 	};
 
-	GameView.prototype.startInterval = function () {
-	  this.animateCallBack();
-	  // this.interval = setInterval(this.animateCallBack.bind(this), 33);
-	};
 
 	GameView.prototype.start = function () {
 	  this.gameOver = false;
 	  this.bird.pos = [100, 100];
 	  this.gameFrame = 0;
 	  this.lastTime = 0;
-	  this.startInterval();
+	  this.animateCallBack();
 	};
 
 	GameView.prototype.stop = function () {
-	  // clearInterval(this.interval);
 	  this.removeHandlers();
 	  let resetHandler = (e) => {
 	    if (e.keyCode === 13) {
-	      let hardness = document.getElementById('game-level').value;
-	      this.Constants.hardness(hardness);
 	      new GameView(this.ctx, this.Constants);
 	      window.removeEventListener('keydown', resetHandler);
 	    }
@@ -159,17 +157,15 @@
 
 	const Bird = __webpack_require__(3);
 	const Pipe = __webpack_require__(7);
-	// const Constants = require('./game_constants');
 	const Foreground = __webpack_require__(8);
 	const Util = __webpack_require__(6);
 
 	const Game = function(gv, Constants) {
 	  this.gv = gv;
 	  this.Constants = Constants;
+	  this.updateConstants();
 	  this.score = 0;
 	  this.pipes = [];
-	  this.DIM_X = this.Constants.WIDTH;
-	  this.DIM_Y = this.Constants.HEIGHT;
 	  this.background = document.getElementById('background');
 	  this.foreground = [new Foreground(this, { pos: [0, 410], vel: [0, 0] } )];
 	  this.gameOver = false;
@@ -177,7 +173,12 @@
 	  this.gameSwitch = false;
 	  this.jumpCount = 0;
 	  this.addPipes();
+	};
+
+	Game.prototype.updateConstants = function() {
 	  this.pipeSpawnRate = Util.clampNum(this.Constants.PIPE_SPAWN_RATE, 100, 150);
+	  this.DIM_X = this.Constants.WIDTH;
+	  this.DIM_Y = this.Constants.HEIGHT;
 	};
 
 	Game.prototype.draw = function(ctx) {
@@ -201,7 +202,7 @@
 	    ctx.font = '48px serif';
 	    ctx.fillText(`${this.score}`, 160, 50);
 	    ctx.font = '12px serif';
-	    ctx.fillText(`HIGHSCORE: ${localStorage.highScore}`, 30, 30);
+	    ctx.fillText(`HIGHSCORE: ${localStorage["flappybirdHighScore" + this.Constants.DIFFICULTY]}`, 30, 30);
 	    if (this.gameOver) {
 	      this.gameoverText(ctx);
 	    }
@@ -317,8 +318,8 @@
 	Game.prototype.stopGame = function() {
 	  this.gameOver = true;
 	  // debugger
-	  if (Number(localStorage.highScore) < this.score) {
-	    localStorage.highScore = `${this.score}`;
+	  if (Number(localStorage["flappybirdHighScore" + this.Constants.DIFFICULTY]) < this.score) {
+	    localStorage["flappybirdHighScore" + this.Constants.DIFFICULTY] = `${this.score}`;
 	  }
 	  this.allObjects().forEach( (obj) =>  obj.vel = [0, 0] );
 	  this.bird.accel = [0, 0];
@@ -337,8 +338,7 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// const Constants = require('./game_constants');
-	const MovingObject = __webpack_require__(5);
+	const MovingObject = __webpack_require__(4);
 	const Util = __webpack_require__(6);
 
 	const Bird = function(obj, Constants) {
@@ -428,47 +428,7 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const Util = __webpack_require__(6);
-
-	module.exports = {
-	  //// Leave These Alone...
-	  WIDTH: 350,
-	  HEIGHT: 525,
-	  NORMAL_TIME_DELTA: 1000/60,
-
-	  //// ...And Play With These :)
-	  GRAVITY: [0.1, 0.28],
-	  GAME_VELOCITY: [-1, 0],
-	  BIRD_MAX_VEL: 8,
-	  // Choose EXTRA_PIPE_WIDTH between 0 - 30
-	  EXTRA_PIPE_WIDTH: 0,
-	  // Choose PIPE_SPAWN_RATE between 100 - 150
-	  PIPE_SPAWN_RATE: 100,
-	  hardness: function(num) {
-
-	    let hardness = Util.clampNum(parseInt(num), 0, 3);
-	    if (hardness === 0) {
-	      this.EXTRA_PIPE_WIDTH = 30;
-	      this.PIPE_SPAWN_RATE = 150;
-	    } else if (hardness === 1) {
-	      this.EXTRA_PIPE_WIDTH = 25;
-	      this.PIPE_SPAWN_RATE = 130;
-	    } else if (hardness === 2) {
-	      this.EXTRA_PIPE_WIDTH = 10;
-	      this.PIPE_SPAWN_RATE = 115;
-	    } else if (hardness === 3) {
-	      this.EXTRA_PIPE_WIDTH = 0;
-	      this.PIPE_SPAWN_RATE = 100;
-	    }
-	  },
-	};
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	const Constants = __webpack_require__(4);
+	const Constants = __webpack_require__(5);
 
 	const MovingObject = function(options) {
 	  this.pos = options.pos;
@@ -493,6 +453,51 @@
 
 
 /***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	const Util = __webpack_require__(6);
+
+	module.exports = {
+	  //// Leave These Alone...
+	  WIDTH: 350,
+	  HEIGHT: 525,
+	  NORMAL_TIME_DELTA: 1000/60,
+
+	  //// ...And Play With These :)
+	  GRAVITY: [0.1, 0.28],
+	  GAME_VELOCITY: [-1, 0],
+	  BIRD_MAX_VEL: 8,
+	  // Choose EXTRA_PIPE_WIDTH between 0 - 30
+	  EXTRA_PIPE_WIDTH: 0,
+	  // Choose PIPE_SPAWN_RATE between 100 - 150
+	  PIPE_SPAWN_RATE: 100,
+	  DIFFICULTY: "EASY",
+	  hardness: function(num) {
+
+	    let hardness = Util.clampNum(parseInt(num), 0, 3);
+	    if (hardness === 0) {
+	      this.EXTRA_PIPE_WIDTH = 30;
+	      this.PIPE_SPAWN_RATE = 150;
+	      this.DIFFICULTY = "EASY";
+	    } else if (hardness === 1) {
+	      this.EXTRA_PIPE_WIDTH = 25;
+	      this.PIPE_SPAWN_RATE = 130;
+	      this.DIFFICULTY = "MEDEASY";
+	    } else if (hardness === 2) {
+	      this.EXTRA_PIPE_WIDTH = 10;
+	      this.PIPE_SPAWN_RATE = 115;
+	      this.DIFFICULTY = "MEDHARD";
+	    } else if (hardness === 3) {
+	      this.EXTRA_PIPE_WIDTH = 0;
+	      this.PIPE_SPAWN_RATE = 100;
+	      this.DIFFICULTY = "HARD";
+	    }
+	  },
+	};
+
+
+/***/ },
 /* 6 */
 /***/ function(module, exports) {
 
@@ -513,8 +518,7 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// const Constants = require('./game_constants');
-	const MovingObject = __webpack_require__(5);
+	const MovingObject = __webpack_require__(4);
 	const Util = __webpack_require__(6);
 
 	const Pipe = function(options) {
@@ -577,7 +581,7 @@
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const MovingObject = __webpack_require__(5);
+	const MovingObject = __webpack_require__(4);
 	const Util = __webpack_require__(6);
 
 	const Foreground = function(game, options) {
