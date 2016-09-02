@@ -176,7 +176,7 @@
 	};
 
 	Game.prototype.updateConstants = function() {
-	  this.pipeSpawnRate = Util.clampNum(this.Constants.PIPE_SPAWN_RATE, 100, 150);
+	  this.pipeSpawnRate = Util.clampNum(this.Constants.PIPE_SPAWN_RATE, 100, 180);
 	  this.DIM_X = this.Constants.WIDTH;
 	  this.DIM_Y = this.Constants.HEIGHT;
 	};
@@ -345,14 +345,13 @@
 	  MovingObject.call(this, {game: obj.game, pos: obj.pos, vel: [0, 0], radius: 15, color: "green"});
 	  this.Constants = Constants;
 	  this.accel = [0, 0];
-	  // FINAL ACCEL = [0, 0.28];
 	  this.image = document.getElementById('bird');
 	  this.sx = 0;
 	  this.birdFrame = 0;
 	  this.flapSpeed = 8;
 	};
-
 	Util.inherits(Bird, MovingObject);
+
 
 	Bird.prototype.jump = function() {
 	  if (this.vel[1] > -1) {
@@ -469,7 +468,7 @@
 	  GAME_VELOCITY: [-1, 0],
 	  BIRD_MAX_VEL: 8,
 	  // Choose EXTRA_PIPE_WIDTH between 0 - 30
-	  EXTRA_PIPE_WIDTH: 0,
+	  EXTRA_PIPE_WIDTH: 30,
 	  // Choose PIPE_SPAWN_RATE between 100 - 150
 	  PIPE_SPAWN_RATE: 100,
 	  DIFFICULTY: "EASY",
@@ -477,16 +476,16 @@
 
 	    let hardness = Util.clampNum(parseInt(num), 0, 3);
 	    if (hardness === 0) {
-	      this.EXTRA_PIPE_WIDTH = 30;
-	      this.PIPE_SPAWN_RATE = 150;
+	      this.EXTRA_PIPE_WIDTH = 60;
+	      this.PIPE_SPAWN_RATE = 180;
 	      this.DIFFICULTY = "EASY";
 	    } else if (hardness === 1) {
-	      this.EXTRA_PIPE_WIDTH = 25;
-	      this.PIPE_SPAWN_RATE = 130;
+	      this.EXTRA_PIPE_WIDTH = 40;
+	      this.PIPE_SPAWN_RATE = 150;
 	      this.DIFFICULTY = "MEDEASY";
 	    } else if (hardness === 2) {
-	      this.EXTRA_PIPE_WIDTH = 10;
-	      this.PIPE_SPAWN_RATE = 115;
+	      this.EXTRA_PIPE_WIDTH = 20;
+	      this.PIPE_SPAWN_RATE = 125;
 	      this.DIFFICULTY = "MEDHARD";
 	    } else if (hardness === 3) {
 	      this.EXTRA_PIPE_WIDTH = 0;
@@ -547,7 +546,7 @@
 
 	  // Bottom Pipe
 	  let posX = options.pos[0];
-	  let pipeWidth = 90 + Util.clampNum(Constants.EXTRA_PIPE_WIDTH, 0, 30);
+	  let pipeWidth = 90 + Util.clampNum(Constants.EXTRA_PIPE_WIDTH, 0, 60);
 	  options.pos = [posX, (30 * options.gapNum) + pipeWidth];
 
 	  options.h = 600;
