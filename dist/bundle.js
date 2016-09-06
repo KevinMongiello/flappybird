@@ -79,8 +79,7 @@
 	  this.Constants = Constants;
 	  this.game = new Game(this, this.Constants);
 	  this.ctx = ctx;
-	  this.bird = this.game.addBird(this.Constants);
-	  this.game.addPipes();
+	  this.bird = this.game.bird;
 	  this.bindKeyHandlers();
 	  this.jumpCount = this.game.jumpCount;
 	  this.start();
@@ -91,6 +90,7 @@
 
 	GameView.prototype.keypress = function(e) {
 	  if (e.key === "ArrowUp" || e.key === "w") {
+	    // Switch between load screen and gameplay
 	    if (this.jumpCount < 1) {
 	      this.Constants.hardness(document.getElementById('game-level').value);
 	      this.game.updateConstants();
@@ -110,20 +110,16 @@
 	  document.addEventListener("keydown", this.keypress.bind(this));
 	};
 
-	GameView.prototype.removeHandlers = function() {
-	  document.removeEventListener("keydown", this.keypress);
-	};
-
 	GameView.prototype.animateCallBack = function (time) {
 	  if (this.gameOver === true) {
 	    this.stop();
-	    return;
+	    return; // Return out of animation
 	  }
 	  let timeDelta = time - this.lastTime;
-	  this.gameFrame ++;
+	  this.lastTime = time;
+	  this.gameFrame++;
 	  this.game.step(this.gameFrame, timeDelta);
 	  this.game.draw(this.ctx);
-	  this.lastTime = time;
 	  requestAnimationFrame(this.animateCallBack.bind(this));
 	};
 
@@ -137,7 +133,7 @@
 	};
 
 	GameView.prototype.stop = function () {
-	  this.removeHandlers();
+	  // Use fat arrow to work around binding
 	  let resetHandler = (e) => {
 	    if (e.keyCode === 13) {
 	      new GameView(this.ctx, this.Constants);
@@ -165,14 +161,16 @@
 	  this.Constants = Constants;
 	  this.updateConstants();
 	  this.score = 0;
+	  this.gameOver = false;
+	  this.gameSwitch = false;
 	  this.pipes = [];
 	  this.background = document.getElementById('background');
 	  this.foreground = [new Foreground(this, { pos: [0, 410], vel: [0, 0] } )];
-	  this.gameOver = false;
 	  this.GROUND_Y = 410;
-	  this.gameSwitch = false;
 	  this.jumpCount = 0;
+	  this.lastHighScore = localStorage["flappybirdHighScore" + this.Constants.DIFFICULTY];
 	  this.addPipes();
+	  this.bird = this.addBird(Constants);
 	};
 
 	Game.prototype.updateConstants = function() {
@@ -210,9 +208,15 @@
 	};
 
 	Game.prototype.gameoverText = function(ctx) {
-	  ctx.fillStyle = "white";
 	  ctx.font = '24px serif';
-	  ctx.fillText("GAME OVER", 50, 100);
+	  if (this.score <= this.lastHighScore) {
+	    ctx.fillStyle = "white";
+	    ctx.fillText("GAME OVER", 50, 100);
+	  } else {
+	    ctx.fillStyle = "red";
+	    ctx.fillText("NEW HIGH SCORE!", 50, 100);
+	  }
+	  ctx.fillStyle = "white";
 	  ctx.fillText("Press 'Enter' to play again!", 50, 130);
 	};
 
@@ -463,7 +467,7 @@
 	  HEIGHT: 525,
 	  NORMAL_TIME_DELTA: 1000/60,
 
-	  //// ...And Play With These :)
+	  //// ...And Play With These
 	  GRAVITY: [0.1, 0.28],
 	  GAME_VELOCITY: [-1, 0],
 	  BIRD_MAX_VEL: 8,
