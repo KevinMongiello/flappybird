@@ -38,9 +38,9 @@ Animation is achieved using the browsers native `requestAnimationFrame` function
 
 **Inheritance**
 
-All moving objects including the bird, the pipes, and the ground inherit core functionality from a MovingObject class, which reduces code and keeps things DRY.  Most importantly the Moving Object class provides the `move` function which updates an objects own position coordinates based on its or velocity coordinates.  In addition, the Moving Object class also takes care of setting movement-related instance variables.
+All moving objects including the bird, the pipes, and the ground inherit core functionality from a MovingObject class, which reduces code and keeps things DRY.  As seen in the code snippet above, the Moving Object class provides the `move` function which updates an objects own position coordinates based on its or velocity coordinates.  In addition, the Moving Object class also takes care of setting movement-related instance variables.
 
-In the figure below, the Bird constructor sends its context to MovingObject's constructor function with the parameters desired to make a new Bird.  Also, Util calls inherit on Bird and MovingObject, which uses a Surrogate class to act as a middleman between the two classes. This is used to declare a chain of inheritance while also allowing independence of the Bird class to create its own methods.
+In the code below, the Bird constructor sends its context to MovingObject's constructor function with the parameters desired to make a new Bird.  This setups up a prototypal inheritance from MovingObject to Bird while also allowing independence of the Bird class to create its own methods.
 
 ![alt tag](docs/images/inheritance.png)
 ***Inheritance***
